@@ -7,6 +7,7 @@ from PySide.QtGui import *
 
 import urllib.request
 import lxml.html
+import threading
 from time import sleep
 
 class MainWindow(QWidget):
@@ -41,9 +42,11 @@ class MainWindow(QWidget):
         try:
             lim = int(self.lim.text())
         except ValueError: self.lim.setText("-1 (no lim)")
-        self.script(self.link.text(), delay, lim, self.link)
-
-
+        t = threading.Thread(target=self.script, args=(self.link.text(), delay, lim, self.link))
+        #self.script(self.link.text(), delay, lim, self.link)
+        #t.daemon = True
+        res = t.start()
+        print(str(res))
     def script(self, url, delay, pageLim, info):
 
         if "m.avito" not in url:
@@ -95,10 +98,14 @@ class MainWindow(QWidget):
             #done = True #debug
             print(pageNum)
             info.setText('working on page: ' + str(pageNum))
-            info.repaint()
+            #info.repaint()
             if response.getcode() != 200 or pageNum == pageLim: done = True
             else: sleep(delay)
 
+        self.writeOut(positions)
+
+
+    def writeOut(self, positions):
         output = open('list.txt', 'wt')
         for line in positions:
             output.write(line[0]+'\t'+line[1]+'\t'+line[2]+'\t'+line[3]+'\n')
